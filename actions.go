@@ -111,6 +111,24 @@ type UpdateIsolatedMarginAction struct {
 	Ntli  float64 `json:"ntli"  msgpack:"ntli"`
 }
 
+// OrderTypeWire represents deterministic order type serialization  
+type OrderTypeWire struct {
+	Limit   *LimitWire   `json:"limit,omitempty"   msgpack:"limit,omitempty"`
+	Trigger *TriggerWire `json:"trigger,omitempty" msgpack:"trigger,omitempty"`
+}
+
+// LimitWire with deterministic field ordering
+type LimitWire struct {
+	Tif string `json:"tif" msgpack:"tif"`
+}
+
+// TriggerWire with Python SDK compliant field ordering: isMarket, tpsl, triggerPx
+type TriggerWire struct {
+	IsMarket  bool   `json:"isMarket"  msgpack:"isMarket"`
+	Tpsl      string `json:"tpsl"      msgpack:"tpsl"`
+	TriggerPx string `json:"triggerPx" msgpack:"triggerPx"`
+}
+
 // OrderWire represents the wire format for orders with deterministic field ordering
 type OrderWire struct {
 	Asset      int            `json:"a"           msgpack:"a"`
@@ -118,7 +136,7 @@ type OrderWire struct {
 	LimitPx    string         `json:"p"           msgpack:"p"`
 	Size       string         `json:"s"           msgpack:"s"`
 	ReduceOnly bool           `json:"r"           msgpack:"r"`
-	OrderType  map[string]any `json:"t"           msgpack:"t"`
+	OrderType  OrderTypeWire  `json:"t"           msgpack:"t"`
 	Cloid      *string        `json:"c,omitempty" msgpack:"c,omitempty"`
 }
 

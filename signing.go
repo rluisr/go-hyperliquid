@@ -37,6 +37,10 @@ func actionHash(action any, vaultAddress string, nonce int64, expiresAfter *int6
 		panic(fmt.Sprintf("failed to marshal action: %v", err))
 	}
 	data := buf.Bytes()
+	
+	// DEBUG: Print msgpack data for analysis
+	fmt.Printf("DEBUG: ActionHash - msgpack data hex: %x\n", data)
+	fmt.Printf("DEBUG: ActionHash - msgpack data length: %d\n", len(data))
 
 	// Add nonce as 8 bytes big endian
 	if nonce < 0 {
@@ -164,6 +168,11 @@ func SignL1Action(
 	expiresAfter *int64,
 	isMainnet bool,
 ) (SignatureResult, error) {
+	// Debug: Print wallet address derived from private key
+	publicKey := privateKey.Public().(*ecdsa.PublicKey)
+	walletAddr := crypto.PubkeyToAddress(*publicKey).Hex()
+	fmt.Printf("DEBUG: SignL1Action - Wallet Address: %s, VaultAddress: %s, IsMainnet: %t\n", walletAddr, vaultAddress, isMainnet)
+	
 	// Step 1: Create action hash
 	hash := actionHash(action, vaultAddress, timestamp, expiresAfter)
 

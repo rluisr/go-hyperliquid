@@ -3,6 +3,7 @@ package hyperliquid
 import (
 	"crypto/ecdsa"
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -69,19 +70,48 @@ func (e *Exchange) postAction(
 		"nonce":     nonce,
 		"signature": signature,
 	}
-
-	if e.vault != "" {
-		// Handle vault address based on action type
-		if actionMap, ok := action.(map[string]any); ok {
-			if actionMap["type"] != "usdClassTransfer" {
-				payload["vaultAddress"] = e.vault
-			} else {
-				payload["vaultAddress"] = nil
+	
+	// Debug: Print payload structure for trigger orders
+	if actionStruct, ok := action.(OrderAction); ok {
+		for i, order := range actionStruct.Orders {
+			if order.OrderType.Trigger != nil {
+				fmt.Printf("DEBUG: Trigger Order #%d - Asset: %d, IsBuy: %t, Vault: '%s'\n", i, order.Asset, order.IsBuy, e.vault)
 			}
+		}
+	}
+
+	// Always handle vault address to match signing logic
+	// Handle vault address based on action type
+	if actionMap, ok := action.(map[string]any); ok {
+		if actionMap["type"] != "usdClassTransfer" {
+			if e.vault != "" {
+				payload["vaultAddress"] = e.vault
+			}
+			// Note: For empty vault, we don't include vaultAddress field
+			// This matches the signing logic where empty vault adds 0x00 byte
 		} else {
-			// For struct types, we need to use reflection or type assertion
-			// For now, assume it's not usdClassTransfer
+			payload["vaultAddress"] = nil
+		}
+	} else {
+		// For struct types (like OrderAction) - including trigger orders
+		// Always include vaultAddress to match authentication expectations
+		if e.vault != "" {
 			payload["vaultAddress"] = e.vault
+		} else {
+			// For empty vault, completely omit vaultAddress field for trigger orders
+			if actionStruct, ok := action.(OrderAction); ok {
+				hasTriggerOrder := false
+				for _, order := range actionStruct.Orders {
+					if order.OrderType.Trigger != nil {
+						hasTriggerOrder = true
+						break
+					}
+				}
+				if hasTriggerOrder {
+					// Don't add vaultAddress field at all for trigger orders with empty vault
+					fmt.Printf("DEBUG: Omitting vaultAddress field completely for trigger order\n")
+				}
+			}
 		}
 	}
 

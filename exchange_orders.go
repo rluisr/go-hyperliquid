@@ -59,18 +59,24 @@ func newCreateOrderAction(
 			return OrderAction{}, fmt.Errorf("failed to wire size for order %d: %w", i, err)
 		}
 
-		// Build order type map with proper field ordering
-		orderTypeMap := make(map[string]any)
+		// Build order type with deterministic struct ordering  
+		var orderTypeWire OrderTypeWire
 		if order.OrderType.Limit != nil {
-			orderTypeMap["limit"] = map[string]any{
-				"tif": order.OrderType.Limit.Tif,
+			orderTypeWire.Limit = &LimitWire{
+				Tif: string(order.OrderType.Limit.Tif),
 			}
 		} else if order.OrderType.Trigger != nil {
-			orderTypeMap["trigger"] = map[string]any{
-				"triggerPx": order.OrderType.Trigger.TriggerPx,
-				"isMarket":  order.OrderType.Trigger.IsMarket,
-				"tpsl":      order.OrderType.Trigger.Tpsl,
+			triggerPxWire, err := floatToWire(order.OrderType.Trigger.TriggerPx)
+			if err != nil {
+				return OrderAction{}, fmt.Errorf("failed to wire triggerPx for order %d: %w", i, err)
 			}
+			// Create trigger struct with Python SDK compliant field ordering: isMarket, tpsl, triggerPx
+			orderTypeWire.Trigger = &TriggerWire{
+				IsMarket:  order.OrderType.Trigger.IsMarket,
+				Tpsl:      order.OrderType.Trigger.Tpsl,
+				TriggerPx: triggerPxWire,
+			}
+			fmt.Printf("DEBUG: Trigger struct: %+v\n", orderTypeWire.Trigger)
 		}
 
 		orderWire := OrderWire{
@@ -79,7 +85,7 @@ func newCreateOrderAction(
 			LimitPx:    priceWire,
 			Size:       sizeWire,
 			ReduceOnly: order.ReduceOnly,
-			OrderType:  orderTypeMap,
+			OrderType:  orderTypeWire,
 			Cloid:      order.ClientOrderID,
 		}
 		orderRequests[i] = orderWire
@@ -162,17 +168,21 @@ func newModifyOrderAction(
 		return ModifyAction{}, fmt.Errorf("failed to wire size: %w", err)
 	}
 
-	// Build order type map with proper field ordering
-	orderTypeMap := make(map[string]any)
+	// Build order type with deterministic struct ordering
+	var orderTypeWire OrderTypeWire
 	if modifyRequest.Order.OrderType.Limit != nil {
-		orderTypeMap["limit"] = map[string]any{
-			"tif": modifyRequest.Order.OrderType.Limit.Tif,
+		orderTypeWire.Limit = &LimitWire{
+			Tif: string(modifyRequest.Order.OrderType.Limit.Tif),
 		}
 	} else if modifyRequest.Order.OrderType.Trigger != nil {
-		orderTypeMap["trigger"] = map[string]any{
-			"triggerPx": modifyRequest.Order.OrderType.Trigger.TriggerPx,
-			"isMarket":  modifyRequest.Order.OrderType.Trigger.IsMarket,
-			"tpsl":      modifyRequest.Order.OrderType.Trigger.Tpsl,
+		triggerPxWire, err := floatToWire(modifyRequest.Order.OrderType.Trigger.TriggerPx)
+		if err != nil {
+			return ModifyAction{}, fmt.Errorf("failed to wire triggerPx: %w", err)
+		}
+		orderTypeWire.Trigger = &TriggerWire{
+			IsMarket:  modifyRequest.Order.OrderType.Trigger.IsMarket,
+			Tpsl:      modifyRequest.Order.OrderType.Trigger.Tpsl,
+			TriggerPx: triggerPxWire,
 		}
 	}
 
@@ -185,7 +195,7 @@ func newModifyOrderAction(
 			LimitPx:    priceWire,
 			Size:       sizeWire,
 			ReduceOnly: modifyRequest.Order.ReduceOnly,
-			OrderType:  orderTypeMap,
+			OrderType:  orderTypeWire,
 			Cloid:      modifyRequest.Order.ClientOrderID,
 		},
 	}, nil
