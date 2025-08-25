@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/ethereum/go-ethereum/crypto"
-	"github.com/sonirico/go-hyperliquid"
+	"github.com/rluisr/go-hyperliquid"
 )
 
 func newTestExchange(t *testing.T) *hyperliquid.Exchange {

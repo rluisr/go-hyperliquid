@@ -7,7 +7,7 @@ import (
 
 	"github.com/joho/godotenv"
 
-	"github.com/sonirico/go-hyperliquid"
+	"github.com/rluisr/go-hyperliquid"
 )
 
 func TestCancelOrder(t *testing.T) {
