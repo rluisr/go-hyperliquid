@@ -66,8 +66,12 @@ func newCreateOrderAction(
 				"tif": order.OrderType.Limit.Tif,
 			}
 		} else if order.OrderType.Trigger != nil {
+			triggerPxWire, err := floatToWire(order.OrderType.Trigger.TriggerPx)
+			if err != nil {
+				return OrderAction{}, fmt.Errorf("failed to wire triggerPx for order %d: %w", i, err)
+			}
 			orderTypeMap["trigger"] = map[string]any{
-				"triggerPx": order.OrderType.Trigger.TriggerPx,
+				"triggerPx": triggerPxWire,
 				"isMarket":  order.OrderType.Trigger.IsMarket,
 				"tpsl":      order.OrderType.Trigger.Tpsl,
 			}
@@ -169,8 +173,12 @@ func newModifyOrderAction(
 			"tif": modifyRequest.Order.OrderType.Limit.Tif,
 		}
 	} else if modifyRequest.Order.OrderType.Trigger != nil {
+		triggerPxWire, err := floatToWire(modifyRequest.Order.OrderType.Trigger.TriggerPx)
+		if err != nil {
+			return ModifyAction{}, fmt.Errorf("failed to wire triggerPx for modify: %w", err)
+		}
 		orderTypeMap["trigger"] = map[string]any{
-			"triggerPx": modifyRequest.Order.OrderType.Trigger.TriggerPx,
+			"triggerPx": triggerPxWire,
 			"isMarket":  modifyRequest.Order.OrderType.Trigger.IsMarket,
 			"tpsl":      modifyRequest.Order.OrderType.Trigger.Tpsl,
 		}
