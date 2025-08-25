@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/joho/godotenv"
-	"github.com/sonirico/go-hyperliquid"
+	"github.com/rluisr/go-hyperliquid"
 )
 
 func TestOrder(t *testing.T) {
