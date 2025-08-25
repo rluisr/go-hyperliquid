@@ -59,7 +59,7 @@ func newCreateOrderAction(
 			return OrderAction{}, fmt.Errorf("failed to wire size for order %d: %w", i, err)
 		}
 
-		// Build order type with deterministic struct ordering  
+		// Build order type with deterministic struct ordering
 		var orderTypeWire OrderTypeWire
 		if order.OrderType.Limit != nil {
 			orderTypeWire.Limit = &LimitWire{
@@ -182,21 +182,12 @@ func newModifyOrderAction(
 	} else if modifyRequest.Order.OrderType.Trigger != nil {
 		triggerPxWire, err := floatToWire(modifyRequest.Order.OrderType.Trigger.TriggerPx)
 		if err != nil {
-<<<<<<< HEAD
 			return ModifyAction{}, fmt.Errorf("failed to wire triggerPx: %w", err)
 		}
 		orderTypeWire.Trigger = &TriggerWire{
 			IsMarket:  modifyRequest.Order.OrderType.Trigger.IsMarket,
 			Tpsl:      modifyRequest.Order.OrderType.Trigger.Tpsl,
 			TriggerPx: triggerPxWire,
-=======
-			return ModifyAction{}, fmt.Errorf("failed to wire triggerPx for modify: %w", err)
-		}
-		orderTypeMap["trigger"] = map[string]any{
-			"triggerPx": triggerPxWire,
-			"isMarket":  modifyRequest.Order.OrderType.Trigger.IsMarket,
-			"tpsl":      modifyRequest.Order.OrderType.Trigger.Tpsl,
->>>>>>> 7b5db9016ae78025943f62b23c8b0f017861b5bf
 		}
 	}
 
